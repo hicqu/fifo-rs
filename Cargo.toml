@@ -1,0 +1,6 @@
+[package]
+name = "fifo"
+version = "0.1.0"
+authors = ["qupeng <onlyqupeng@gmail.com>"]
+
+[dependencies]
