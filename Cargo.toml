@@ -1,7 +1,6 @@
 [package]
 name = "fifo"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["qupeng <onlyqupeng@gmail.com>"]
 
 [dependencies]
-libc = "0.2.*"

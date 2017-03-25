@@ -9,7 +9,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use alloc::heap;
 use shutdown::{Shutdown, SHUT_READ, SHUT_WRITE};
 
-struct _Inner {
+struct Inner {
     buffer: *mut u8,
     size: usize,
     pin: AtomicUsize,
@@ -17,38 +17,35 @@ struct _Inner {
     shutdown: Shutdown,
 }
 
-impl _Inner {
-    fn new(size: usize) -> io::Result<Self> {
-        let shutdown = Shutdown::new()?;
-        let inner = _Inner {
+impl Inner {
+    fn new(size: usize) -> Self {
+        let shutdown = Shutdown::new();
+        Inner {
             buffer: unsafe { heap::allocate(size, 1) },
             size: size,
             pin: AtomicUsize::new(0),
             pout: AtomicUsize::new(0),
             shutdown: shutdown,
-        };
-        Ok(inner)
+        }
     }
 }
 
-unsafe impl Sync for _Inner {}
+unsafe impl Sync for Inner {}
 
-impl Drop for _Inner {
+impl Drop for Inner {
     fn drop(&mut self) {
         unsafe { heap::deallocate(self.buffer, self.size, 1); }
     }
 }
 
-type Inner = Arc<_Inner>;
-
 /// The fifo sender.
 pub struct Sender {
-    inner: Inner,
+    inner: Arc<Inner>,
 }
 
 /// The fifo receiver.
 pub struct Receiver {
-    inner: Inner,
+    inner: Arc<Inner>,
 }
 
 impl Drop for Sender {
@@ -86,18 +83,17 @@ fn align_up(size: usize) -> usize {
 
 /// Returns the sender and receiver pair. The fifo between
 /// them has capacity as align_up(size).
-pub fn fifo(size: usize) -> io::Result<(Sender, Receiver)> {
+pub fn fifo(size: usize) -> (Sender, Receiver) {
     let size = align_up(size);
-    let inner = Arc::new(_Inner::new(size)?);
+    let inner = Arc::new(Inner::new(size));
     let sender = Sender { inner: inner.clone() };
     let receiver = Receiver { inner: inner };
-    Ok((sender, receiver))
+    (sender, receiver)
 }
 
 impl io::Write for Sender {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
-        let inner: &mut Inner = &mut self.inner;
-
+        let inner: &Inner = &self.inner;
         let mut pin: usize;
         let mut pout: usize;
         let mut avaliable: usize;
@@ -133,7 +129,7 @@ impl io::Write for Sender {
 
 impl io::Read for Receiver {
     fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
-        let inner: &mut Inner = &mut self.inner;
+        let inner: &Inner = &self.inner;
         let mut pin: usize;
         let mut pout: usize;
         let mut avaliable: usize;

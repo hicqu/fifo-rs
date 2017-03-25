@@ -4,7 +4,7 @@ use std::io::prelude::*;
 use fifo::fifo;
 
 fn main() {
-    let (mut sender, mut receiver) = fifo(1 << 20).unwrap();
+    let (mut sender, mut receiver) = fifo(1 << 20);
     let write_thread = thread::Builder::new().name("write".to_owned())
         .spawn(move || {
         let mut f = fs::File::open("./rust.avi").unwrap();
