@@ -1,27 +1,33 @@
 #![feature(alloc, heap_api)]
 #![feature(optin_builtin_traits)]
 extern crate alloc;
+mod shutdown;
 use std::{io, slice, thread, time};
 use std::cmp::min;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use alloc::heap;
+use shutdown::{Shutdown, SHUT_READ, SHUT_WRITE};
 
 struct _Inner {
     buffer: *mut u8,
     size: usize,
     pin: AtomicUsize,
     pout: AtomicUsize,
+    shutdown: Shutdown,
 }
 
 impl _Inner {
-    fn new(size: usize) -> Self {
-        _Inner {
+    fn new(size: usize) -> io::Result<Self> {
+        let shutdown = Shutdown::new()?;
+        let inner = _Inner {
             buffer: unsafe { heap::allocate(size, 1) },
             size: size,
             pin: AtomicUsize::new(0),
             pout: AtomicUsize::new(0),
-        }
+            shutdown: shutdown,
+        };
+        Ok(inner)
     }
 }
 
@@ -45,10 +51,23 @@ pub struct Receiver {
     inner: Inner,
 }
 
+impl Drop for Sender {
+    fn drop(&mut self) {
+        self.inner.shutdown.shutdown(SHUT_WRITE);
+    }
+}
+
+impl Drop for Receiver {
+    fn drop(&mut self) {
+        self.inner.shutdown.shutdown(SHUT_READ);
+    }
+}
+
 unsafe impl Send for Sender {}
 unsafe impl Send for Receiver {}
 impl !Sync for Sender {}
 impl !Sync for Receiver {}
+
 
 const FIFO_MIN_CAPACITY: usize = 128;
 
@@ -67,12 +86,12 @@ fn align_up(size: usize) -> usize {
 
 /// Returns the sender and receiver pair. The fifo between
 /// them has capacity as align_up(size).
-pub fn fifo(size: usize) -> (Sender, Receiver) {
+pub fn fifo(size: usize) -> io::Result<(Sender, Receiver)> {
     let size = align_up(size);
-    let inner = Arc::new(_Inner::new(size));
+    let inner = Arc::new(_Inner::new(size)?);
     let sender = Sender { inner: inner.clone() };
     let receiver = Receiver { inner: inner };
-    (sender, receiver)
+    Ok((sender, receiver))
 }
 
 impl io::Write for Sender {
@@ -89,8 +108,11 @@ impl io::Write for Sender {
             if avaliable > 0 {
                 break;
             } else {
+                if inner.shutdown.shuted(SHUT_READ) {
+                    return Err(io::Error::new(io::ErrorKind::BrokenPipe, "broken pipe"));
+                }
                 thread::sleep(time::Duration::from_millis(10));
-            }
+            };
         }
         let start_pos_1 = pin & (inner.size - 1);
         let len_to_write_1 = min(inner.size - start_pos_1, avaliable);
@@ -122,6 +144,9 @@ impl io::Read for Receiver {
             if avaliable > 0 {
                 break;
             } else {
+                if inner.shutdown.shuted(SHUT_WRITE) {
+                    return Ok(0);
+                }
                 thread::sleep(time::Duration::from_millis(10));
             }
         }
