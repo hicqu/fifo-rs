@@ -1,0 +1,8 @@
+[package]
+name = "fifo-examples"
+version = "0.1.0"
+authors = ["qupeng <onlyqupeng@gmail.com>"]
+
+[dependencies.fifo]
+version = "0.1.*"
+path = "../"

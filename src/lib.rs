@@ -104,7 +104,7 @@ impl io::Write for Sender {
         loop {
             pin = inner.pin.load(Ordering::Relaxed);
             pout = inner.pout.load(Ordering::Acquire);
-            avaliable = min(inner.size - pin + pout, bytes.len());
+            avaliable = min(inner.size - (pin - pout), bytes.len());
             if avaliable > 0 {
                 break;
             } else {
@@ -119,7 +119,7 @@ impl io::Write for Sender {
         let len_to_write_2 = avaliable - len_to_write_1;
         unsafe {
             let mut dest = slice::from_raw_parts_mut(inner.buffer, inner.size);
-            dest[start_pos_1..].copy_from_slice(&bytes[0..len_to_write_1]);
+            dest[start_pos_1..(start_pos_1+len_to_write_1)].copy_from_slice(&bytes[0..len_to_write_1]);
             dest[0..len_to_write_2].copy_from_slice(&bytes[len_to_write_1..avaliable]);
         }
         inner.pin.store(pin + avaliable, Ordering::Release);
@@ -155,7 +155,7 @@ impl io::Read for Receiver {
         let len_to_read_2 = avaliable - len_to_read_1;
         unsafe {
             let src = slice::from_raw_parts_mut(inner.buffer, inner.size);
-            bytes[0..len_to_read_1].copy_from_slice(&src[start_pos_1..len_to_read_1]); 
+            bytes[0..len_to_read_1].copy_from_slice(&src[start_pos_1..(start_pos_1+len_to_read_1)]); 
             bytes[len_to_read_1..avaliable].copy_from_slice(&src[0..len_to_read_2]);
         }
         inner.pout.store(pout + avaliable, Ordering::Release);
