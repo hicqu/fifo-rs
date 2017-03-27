@@ -2,7 +2,8 @@
 #![feature(optin_builtin_traits)]
 extern crate alloc;
 mod shutdown;
-use std::{io, slice, thread, time};
+pub mod splice;
+use std::{io, slice, thread, time, usize};
 use std::cmp::min;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -30,13 +31,13 @@ impl Inner {
     }
 }
 
-unsafe impl Sync for Inner {}
-
 impl Drop for Inner {
     fn drop(&mut self) {
         unsafe { heap::deallocate(self.buffer, self.size, 1); }
     }
 }
+
+unsafe impl Sync for Inner {}
 
 /// The fifo sender.
 pub struct Sender {
@@ -91,8 +92,10 @@ pub fn fifo(size: usize) -> (Sender, Receiver) {
     (sender, receiver)
 }
 
-impl io::Write for Sender {
-    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+impl Sender {
+    fn do_write<T>(&mut self, bytes: usize, mut cp_data_to: T) -> io::Result<usize>
+        where T: FnMut(&mut [u8], usize, usize) -> io::Result<usize>
+    {
         let inner: &Inner = &self.inner;
         let mut pin: usize;
         let mut pout: usize;
@@ -100,7 +103,7 @@ impl io::Write for Sender {
         loop {
             pin = inner.pin.load(Ordering::Relaxed);
             pout = inner.pout.load(Ordering::Acquire);
-            avaliable = min(inner.size - (pin - pout), bytes.len());
+            avaliable = min(inner.size - (pin - pout), bytes);
             if avaliable > 0 {
                 break;
             } else {
@@ -110,16 +113,26 @@ impl io::Write for Sender {
                 thread::sleep(time::Duration::from_millis(10));
             };
         }
-        let start_pos_1 = pin & (inner.size - 1);
-        let len_to_write_1 = min(inner.size - start_pos_1, avaliable);
-        let len_to_write_2 = avaliable - len_to_write_1;
-        unsafe {
-            let mut dest = slice::from_raw_parts_mut(inner.buffer, inner.size);
-            dest[start_pos_1..(start_pos_1+len_to_write_1)].copy_from_slice(&bytes[0..len_to_write_1]);
+        let start_pos = pin & (inner.size - 1);
+        let mut dest = unsafe { slice::from_raw_parts_mut(inner.buffer, inner.size) };
+
+        let exactly_write = cp_data_to(&mut dest, start_pos, avaliable)?;
+        inner.pin.store(pin + exactly_write, Ordering::Release);
+        Ok(exactly_write)
+    }
+}
+
+impl io::Write for Sender {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        let bytes_len = bytes.len();
+        let copy_data_to = move |dest: &mut [u8], start_pos: usize, avaliable: usize| {
+            let len_to_write_1 = min(dest.len() - start_pos, avaliable);
+            let len_to_write_2 = avaliable - len_to_write_1;
+            dest[start_pos..(start_pos+len_to_write_1)].copy_from_slice(&bytes[0..len_to_write_1]);
             dest[0..len_to_write_2].copy_from_slice(&bytes[len_to_write_1..avaliable]);
-        }
-        inner.pin.store(pin + avaliable, Ordering::Release);
-        Ok(avaliable)
+            Ok(avaliable)
+        };
+        self.do_write(bytes_len, copy_data_to)
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -127,8 +140,10 @@ impl io::Write for Sender {
     }
 }
 
-impl io::Read for Receiver {
-    fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+impl Receiver {
+    fn do_write<T>(&mut self, bytes: usize, mut cp_data_from: T) -> io::Result<usize>
+        where T: FnMut(&[u8], usize, usize) -> io::Result<usize>
+    {
         let inner: &Inner = &self.inner;
         let mut pin: usize;
         let mut pout: usize;
@@ -136,7 +151,7 @@ impl io::Read for Receiver {
         loop {
             pin = inner.pin.load(Ordering::Acquire);
             pout = inner.pout.load(Ordering::Relaxed);
-            avaliable = min(bytes.len(), pin - pout);
+            avaliable = min(bytes, pin - pout);
             if avaliable > 0 {
                 break;
             } else {
@@ -146,19 +161,27 @@ impl io::Read for Receiver {
                 thread::sleep(time::Duration::from_millis(10));
             }
         }
-        let start_pos_1 = pout & (inner.size - 1);
-        let len_to_read_1 = min(inner.size - start_pos_1, avaliable);
-        let len_to_read_2 = avaliable - len_to_read_1;
-        unsafe {
-            let src = slice::from_raw_parts_mut(inner.buffer, inner.size);
-            bytes[0..len_to_read_1].copy_from_slice(&src[start_pos_1..(start_pos_1+len_to_read_1)]); 
-            bytes[len_to_read_1..avaliable].copy_from_slice(&src[0..len_to_read_2]);
-        }
-        inner.pout.store(pout + avaliable, Ordering::Release);
-        Ok(avaliable)
+        let start_pos = pout & (inner.size - 1);
+        let src = unsafe { slice::from_raw_parts_mut(inner.buffer, inner.size) };
+        let exactly_read = cp_data_from(&src, start_pos, avaliable)?;
+        inner.pout.store(pout + exactly_read, Ordering::Release);
+        Ok(exactly_read)
     }
 }
 
+impl io::Read for Receiver {
+    fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+        let bytes_len = bytes.len();
+        let copy_data_from = move |src: &[u8], start_pos: usize, avaliable: usize| {
+            let len_to_read_1 = min(src.len() - start_pos, avaliable);
+            let len_to_read_2 = avaliable - len_to_read_1;
+            bytes[0..len_to_read_1].copy_from_slice(&src[start_pos..(start_pos+len_to_read_1)]); 
+            bytes[len_to_read_1..avaliable].copy_from_slice(&src[0..len_to_read_2]);
+            Ok(avaliable)
+        };
+        self.do_write(bytes_len, copy_data_from)
+    }
+}
 
 #[cfg(test)]
 mod tests {
