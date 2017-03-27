@@ -2,7 +2,7 @@ use std::io;
 use std::cmp::min;
 use super::{Sender, Receiver};
 
-/// 提供类似`splice`系统调用的语义，从另一个`Write`对象中splice一些字节过来。
+/// 提供类似`splice`系统调用的语义，从另一个`Read`对象中splice一些字节过来。
 pub trait SpliceRead {
     fn splice_from<T>(&mut self, r: &mut T, bytes: usize) -> io::Result<usize>
         where T: io::Read;
@@ -39,7 +39,7 @@ impl SpliceRead for Sender {
     }
 }
 
-/// 提供类似`splice`系统调用的语义，splice一些字节到另一个`Read`对象中。
+/// 提供类似`splice`系统调用的语义，splice一些字节到另一个`Write`对象中。
 pub trait SpliceWrite {
     fn splice_to<T>(&mut self, w: &mut T, bytes: usize) -> io::Result<usize>
         where T: io::Write;
