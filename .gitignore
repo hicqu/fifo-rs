@@ -4,3 +4,6 @@
 target/
 **/*.rs.bk
 Cargo.lock
+
+_book
+SUMMARY.md

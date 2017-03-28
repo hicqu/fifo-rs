@@ -1,15 +1,17 @@
+//! Zero-copy interface for `Sender` and `Receiver`, in **splice** style in Linux.
+//! When you want to write bytes into the ring-buffer from a `Read`, or read
+//! bytes from this into a `Write`, you can use `SpliceRead` and `SpliceWrite`.
 use std::io;
 use std::cmp::min;
 use super::{Sender, Receiver};
 
-/// 提供类似`splice`系统调用的语义，从另一个`Read`对象中splice一些字节过来。
+/// Copy some bytes directly from another `Read` object, without use any temporary buffers.
 pub trait SpliceRead {
-    fn splice_from<T>(&mut self, r: &mut T, bytes: usize) -> io::Result<usize>
-        where T: io::Read;
+    /// Copy at most *bytes* bytes from a `Read` *r*.
+    fn splice_from<T>(&mut self, r: &mut T, bytes: usize) -> io::Result<usize> where T: io::Read;
 
-    fn splice_all_from<T>(&mut self, r: &mut T) -> io::Result<()>
-        where T: io::Read
-    {
+    /// Copy all bytes from a `Read` *r*.
+    fn splice_all_from<T>(&mut self, r: &mut T) -> io::Result<()> where T: io::Read {
         loop {
             let bytes = self.splice_from(r, ::std::usize::MAX)?;
             if bytes == 0 {
@@ -21,9 +23,7 @@ pub trait SpliceRead {
 }
 
 impl SpliceRead for Sender {
-    fn splice_from<T>(&mut self, r: &mut T, bytes: usize) -> io::Result<usize>
-        where T: io::Read
-    {
+    fn splice_from<T>(&mut self, r: &mut T, bytes: usize) -> io::Result<usize> where T: io::Read {
         let cp_data_to = |dest: &mut [u8], start_pos: usize, avaliable: usize| {
             assert!(avaliable != 0);
             let len_to_write_1 = min(dest.len() - start_pos, avaliable);
@@ -39,14 +39,13 @@ impl SpliceRead for Sender {
     }
 }
 
-/// 提供类似`splice`系统调用的语义，splice一些字节到另一个`Write`对象中。
+/// Copy some bytes directly into another `Write` object, without use any temporary buffers.
 pub trait SpliceWrite {
-    fn splice_to<T>(&mut self, w: &mut T, bytes: usize) -> io::Result<usize>
-        where T: io::Write;
+    /// Copy at most *bytes* bytes into a `Write` *w*.
+    fn splice_to<T>(&mut self, w: &mut T, bytes: usize) -> io::Result<usize> where T: io::Write;
 
-    fn splice_all_to<T>(&mut self, w: &mut T) -> io::Result<()>
-        where T: io::Write
-    {
+    /// Copy all bytes to a `Write` *w*.
+    fn splice_all_to<T>(&mut self, w: &mut T) -> io::Result<()> where T: io::Write {
         loop {
             let bytes = self.splice_to(w, ::std::usize::MAX)?;
             if bytes == 0 {
@@ -58,9 +57,7 @@ pub trait SpliceWrite {
 }
 
 impl SpliceWrite for Receiver {
-    fn splice_to<T>(&mut self, w: &mut T, bytes: usize) -> io::Result<usize>
-        where T: io::Write
-    {
+    fn splice_to<T>(&mut self, w: &mut T, bytes: usize) -> io::Result<usize> where T: io::Write {
         let cp_data_from = |src: &[u8], start_pos: usize, avaliable: usize| {
             assert!(avaliable != 0);
             let len_to_read_1 = min(src.len() - start_pos, avaliable);

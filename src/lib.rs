@@ -1,9 +1,10 @@
+//! A first-in-first-out bytes ring-buffer like kfifo in Linux.
 #![feature(alloc, heap_api)]
 #![feature(optin_builtin_traits)]
 extern crate alloc;
 mod shutdown;
 pub mod splice;
-use std::{io, slice, thread, time, usize};
+use std::{io, slice, thread, time};
 use std::cmp::min;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -39,12 +40,12 @@ impl Drop for Inner {
 
 unsafe impl Sync for Inner {}
 
-/// The fifo sender.
+/// The fifo sender. It's `Send` but `!Send`.
 pub struct Sender {
     inner: Arc<Inner>,
 }
 
-/// The fifo receiver.
+/// The fifo receiver. It's `Send` but `!Send`.
 pub struct Receiver {
     inner: Arc<Inner>,
 }
@@ -69,7 +70,9 @@ impl !Sync for Receiver {}
 
 const FIFO_MIN_CAPACITY: usize = 128;
 
-fn align_up(size: usize) -> usize {
+/// Align the request size up to power of 2. If it's still less then 128
+/// after aligned, then use 128 as return value.
+pub fn align_up_for_fifo_size(size: usize) -> usize {
     if size < FIFO_MIN_CAPACITY {
         return FIFO_MIN_CAPACITY;
     }
@@ -82,10 +85,10 @@ fn align_up(size: usize) -> usize {
     }
 }
 
-/// Returns the sender and receiver pair. The fifo between
-/// them has capacity as align_up(size).
+/// Construct the fifo with capacity as `align_up_for_fifo_size(usize)`,
+/// and return the `Sender` and `Receiver` pair connected with that.
 pub fn fifo(size: usize) -> (Sender, Receiver) {
-    let size = align_up(size);
+    let size = align_up_for_fifo_size(size);
     let inner = Arc::new(Inner::new(size));
     let sender = Sender { inner: inner.clone() };
     let receiver = Receiver { inner: inner };
@@ -189,9 +192,9 @@ mod tests {
 
     #[test]
     fn test_align_up() {
-        assert_eq!(align_up(1), FIFO_MIN_CAPACITY);
-        assert_eq!(align_up(3), FIFO_MIN_CAPACITY);
-        assert_eq!(align_up(16), FIFO_MIN_CAPACITY);
-        assert_eq!(align_up(255), 256);
+        assert_eq!(align_up_for_fifo_size(1), FIFO_MIN_CAPACITY);
+        assert_eq!(align_up_for_fifo_size(3), FIFO_MIN_CAPACITY);
+        assert_eq!(align_up_for_fifo_size(16), FIFO_MIN_CAPACITY);
+        assert_eq!(align_up_for_fifo_size(255), 256);
     }
 }
