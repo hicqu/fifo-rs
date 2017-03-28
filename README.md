@@ -4,7 +4,7 @@ Fifo is a first-in-first-out bytes ring-buffer, like [kfifo][kfifo in Linux] in 
 [![Build Status](https://api.travis-ci.org/hicqu/fifo-rs.svg?branch=master)](https://travis-ci.org/hicqu/fifo-rs)
 
 **API documentation**
-* [master](http://hicqu.github.io/fifo)
+* [master](http://hicqu.github.io/fifo-rs)
 
 ## Features
 
