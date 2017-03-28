@@ -1,0 +1,11 @@
+language: rust
+cache: cargo
+rust:
+    - nightly
+script:
+    - cargo test --mainfest-path=Cargo.toml
+
+after_success:
+    cargo doc --release && \
+    echo '<meta http-equiv=refresh content=0;url=YOURLIBNAME/index.html>' > target/doc/index.html && \
+    ghp-import -p target/doc && \
