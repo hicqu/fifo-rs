@@ -1,6 +1,12 @@
 [package]
 name = "fifo"
 version = "0.1.2"
+license = "MIT"
 authors = ["qupeng <onlyqupeng@gmail.com>"]
+description = "First-in-first-out lock-free ring-buffer like kfifo in Linux"
+documentation = "https://hicqu.github.io/fifo-rs/fifo/index.html"
+homepage = "https://github.com/hicqu/fifo-rs"
+readme = "README.md"
+keywords = ["ring-buffer", "lock-free"]
 
 [dependencies]
