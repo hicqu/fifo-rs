@@ -117,22 +117,21 @@
 <span id="72">72</span>
 <span id="73">73</span>
 <span id="74">74</span>
-<span id="75">75</span>
-<span id="76">76</span>
-<span id="77">77</span>
 </pre><pre class="rust ">
+<span class="doccomment">//! Zero-copy interface for `Sender` and `Receiver`, in **splice** style in Linux.</span>
+<span class="doccomment">//! When you want to write bytes into the ring-buffer from a `Read`, or read</span>
+<span class="doccomment">//! bytes from this into a `Write`, you can use `SpliceRead` and `SpliceWrite`.</span>
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>;
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">min</span>;
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Sender</span>, <span class="ident">Receiver</span>};
 
-<span class="doccomment">/// 提供类似`splice`系统调用的语义，从另一个`Read`对象中splice一些字节过来。</span>
+<span class="doccomment">/// Copy some bytes directly from another `Read` object, without use any temporary buffers.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SpliceRead</span> {
-    <span class="kw">fn</span> <span class="ident">splice_from</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">bytes</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>
-        <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Read</span>;
+    <span class="doccomment">/// Copy at most *bytes* bytes from a `Read` *r*.</span>
+    <span class="kw">fn</span> <span class="ident">splice_from</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">bytes</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Read</span>;
 
-    <span class="kw">fn</span> <span class="ident">splice_all_from</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-        <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Read</span>
-    {
+    <span class="doccomment">/// Copy all bytes from a `Read` *r*.</span>
+    <span class="kw">fn</span> <span class="ident">splice_all_from</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Read</span> {
         <span class="kw">loop</span> {
             <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">splice_from</span>(<span class="ident">r</span>, ::<span class="ident">std</span>::<span class="ident">usize</span>::<span class="ident">MAX</span>)<span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="ident">bytes</span> <span class="op">==</span> <span class="number">0</span> {
@@ -144,9 +143,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">SpliceRead</span> <span class="kw">for</span> <span class="ident">Sender</span> {
-    <span class="kw">fn</span> <span class="ident">splice_from</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">bytes</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>
-        <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Read</span>
-    {
+    <span class="kw">fn</span> <span class="ident">splice_from</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">r</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">bytes</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Read</span> {
         <span class="kw">let</span> <span class="ident">cp_data_to</span> <span class="op">=</span> <span class="op">|</span><span class="ident">dest</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>], <span class="ident">start_pos</span>: <span class="ident">usize</span>, <span class="ident">avaliable</span>: <span class="ident">usize</span><span class="op">|</span> {
             <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">avaliable</span> <span class="op">!=</span> <span class="number">0</span>);
             <span class="kw">let</span> <span class="ident">len_to_write_1</span> <span class="op">=</span> <span class="ident">min</span>(<span class="ident">dest</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">start_pos</span>, <span class="ident">avaliable</span>);
@@ -162,14 +159,13 @@
     }
 }
 
-<span class="doccomment">/// 提供类似`splice`系统调用的语义，splice一些字节到另一个`Write`对象中。</span>
+<span class="doccomment">/// Copy some bytes directly into another `Write` object, without use any temporary buffers.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SpliceWrite</span> {
-    <span class="kw">fn</span> <span class="ident">splice_to</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">bytes</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>
-        <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Write</span>;
+    <span class="doccomment">/// Copy at most *bytes* bytes into a `Write` *w*.</span>
+    <span class="kw">fn</span> <span class="ident">splice_to</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">bytes</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Write</span>;
 
-    <span class="kw">fn</span> <span class="ident">splice_all_to</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>
-        <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Write</span>
-    {
+    <span class="doccomment">/// Copy all bytes to a `Write` *w*.</span>
+    <span class="kw">fn</span> <span class="ident">splice_all_to</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Write</span> {
         <span class="kw">loop</span> {
             <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">splice_to</span>(<span class="ident">w</span>, ::<span class="ident">std</span>::<span class="ident">usize</span>::<span class="ident">MAX</span>)<span class="question-mark">?</span>;
             <span class="kw">if</span> <span class="ident">bytes</span> <span class="op">==</span> <span class="number">0</span> {
@@ -181,9 +177,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">SpliceWrite</span> <span class="kw">for</span> <span class="ident">Receiver</span> {
-    <span class="kw">fn</span> <span class="ident">splice_to</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">bytes</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>
-        <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Write</span>
-    {
+    <span class="kw">fn</span> <span class="ident">splice_to</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">w</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">bytes</span>: <span class="ident">usize</span>) <span class="op">-&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">io</span>::<span class="ident">Write</span> {
         <span class="kw">let</span> <span class="ident">cp_data_from</span> <span class="op">=</span> <span class="op">|</span><span class="ident">src</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">start_pos</span>: <span class="ident">usize</span>, <span class="ident">avaliable</span>: <span class="ident">usize</span><span class="op">|</span> {
             <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">avaliable</span> <span class="op">!=</span> <span class="number">0</span>);
             <span class="kw">let</span> <span class="ident">len_to_read_1</span> <span class="op">=</span> <span class="ident">min</span>(<span class="ident">src</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">start_pos</span>, <span class="ident">avaliable</span>);

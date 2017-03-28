@@ -48,14 +48,17 @@
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a class='srclink' href='../src/fifo/lib.rs.html#1-197' title='goto source code'>[src]</a></span></h1>
-<h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
+               </span><a class='srclink' href='../src/fifo/lib.rs.html#1-200' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>A first-in-first-out bytes ring-buffer like kfifo in Linux.</p>
+</div><h2 id='modules' class='section-header'><a href="#modules">Modules</a></h2>
 <table>
                        <tr class=' module-item'>
                            <td><a class="mod" href="splice/index.html"
                                   title='mod fifo::splice'>splice</a></td>
                            <td class='docblock-short'>
-                                
+                                <p>Zero-copy interface for <code>Sender</code> and <code>Receiver</code>, in <strong>splice</strong> style in Linux.
+When you want to write bytes into the ring-buffer from a <code>Read</code>, or read
+bytes from this into a <code>Write</code>, you can use <code>SpliceRead</code> and <code>SpliceWrite</code>.</p>
                            </td>
                        </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
@@ -63,23 +66,31 @@
                            <td><a class="struct" href="struct.Receiver.html"
                                   title='struct fifo::Receiver'>Receiver</a></td>
                            <td class='docblock-short'>
-                                <p>The fifo receiver.</p>
+                                <p>The fifo receiver. It&#39;s <code>Send</code> but <code>!Send</code>.</p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
                            <td><a class="struct" href="struct.Sender.html"
                                   title='struct fifo::Sender'>Sender</a></td>
                            <td class='docblock-short'>
-                                <p>The fifo sender.</p>
+                                <p>The fifo sender. It&#39;s <code>Send</code> but <code>!Send</code>.</p>
                            </td>
                        </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
 <table>
                        <tr class=' module-item'>
+                           <td><a class="fn" href="fn.align_up_for_fifo_size.html"
+                                  title='fn fifo::align_up_for_fifo_size'>align_up_for_fifo_size</a></td>
+                           <td class='docblock-short'>
+                                <p>Align the request size up to power of 2. If it&#39;s still less then 128
+after aligned, then use 128 as return value.</p>
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
                            <td><a class="fn" href="fn.fifo.html"
                                   title='fn fifo::fifo'>fifo</a></td>
                            <td class='docblock-short'>
-                                <p>Returns the sender and receiver pair. The fifo between
-them has capacity as align_up(size).</p>
+                                <p>Construct the fifo with capacity as <code>align_up_for_fifo_size(usize)</code>,
+and return the <code>Sender</code> and <code>Receiver</code> pair connected with that.</p>
                            </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>

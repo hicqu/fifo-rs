@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["SpliceRead","提供类似`splice`系统调用的语义，从另一个`Read`对象中splice一些字节过来。"],["SpliceWrite","提供类似`splice`系统调用的语义，splice一些字节到另一个`Write`对象中。"]]});
+initSidebarItems({"trait":[["SpliceRead","Copy some bytes directly from another `Read` object, without use any temporary buffers."],["SpliceWrite","Copy some bytes directly into another `Write` object, without use any temporary buffers."]]});
