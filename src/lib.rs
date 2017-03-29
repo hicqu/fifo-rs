@@ -1,4 +1,21 @@
 //! A first-in-first-out bytes ring-buffer like kfifo in Linux.
+//!
+//! # Example
+//!
+//! ```
+//! use std::io::prelude::*;
+//! use fifo::{fifo, Sender, Receiver};
+//!
+//! let (mut sender, mut receiver) = fifo(128);
+//!
+//! let bytes_to_write = [0 as u8; 512];
+//! assert_eq!(sender.write(&bytes_to_write).unwrap(), 128);
+//!
+//! let mut bytes_to_read = [1 as u8; 512];
+//! assert_eq!(receiver.read(&mut bytes_to_read).unwrap(), 128);
+//!
+//! assert_eq!(bytes_to_write[0..128], bytes_to_read[0..128]);
+//! ```
 #![feature(alloc, heap_api)]
 #![feature(optin_builtin_traits)]
 extern crate alloc;
