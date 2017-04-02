@@ -17,7 +17,7 @@
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc mod">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -43,15 +43,13 @@
         </form>
     </nav>
 
-    <section id='main' class="content mod">
+    <section id='main' class="content">
 <h1 class='fqn'><span class='in-band'>Crate <a class="mod" href=''>fifo</a></span><span class='out-of-band'><span id='render-detail'>
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
                    </a>
-               </span><a class='srclink' href='../src/fifo/lib.rs.html#1-217' title='goto source code'>[src]</a></span></h1>
-<div class='docblock'><p>A first-in-first-out bytes ring-buffer like kfifo in Linux.</p>
-
-<h1 id='example' class='section-header'><a href='#example'>Example</a></h1>
+               </span><a class='srclink' href='../src/fifo/lib.rs.html#1-256' title='goto source code'>[src]</a></span></h1>
+<div class='docblock'><p>A first-in-first-out bytes ring-buffer like kfifo in Linux.</p><h1 id="example" class="section-header"><a href="#example">Example</a></h1>
 <pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">fifo</span>::{<span class="ident">fifo</span>, <span class="ident">Sender</span>, <span class="ident">Receiver</span>};
@@ -71,9 +69,7 @@
                            <td><a class="mod" href="splice/index.html"
                                   title='mod fifo::splice'>splice</a></td>
                            <td class='docblock-short'>
-                                <p>Zero-copy interface for <code>Sender</code> and <code>Receiver</code>, in <strong>splice</strong> style in Linux.
-When you want to write bytes into the ring-buffer from a <code>Read</code>, or read
-bytes from this into a <code>Write</code>, you can use <code>SpliceRead</code> and <code>SpliceWrite</code>.</p>
+                                <p>Zero-copy interface for <code>Sender</code> and <code>Receiver</code>, in <strong>splice</strong> style in Linux. When you want to write bytes into the ring-buffer from a <code>Read</code>, or read bytes from this into a <code>Write</code>, you can use <code>SpliceRead</code> and <code>SpliceWrite</code>.</p>
                            </td>
                        </tr></table><h2 id='structs' class='section-header'><a href="#structs">Structs</a></h2>
 <table>
@@ -90,22 +86,28 @@ bytes from this into a <code>Write</code>, you can use <code>SpliceRead</code> a
                            <td class='docblock-short'>
                                 <p>The fifo sender. It&#39;s <code>Send</code> but <code>!Send</code>.</p>
                            </td>
+                       </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class="enum" href="enum.WouldBlock.html"
+                                  title='enum fifo::WouldBlock'>WouldBlock</a></td>
+                           <td class='docblock-short'>
+                                <p>What can we do when operations on <code>Sender</code> or <code>Receiver</code> would block.</p>
+                           </td>
                        </tr></table><h2 id='functions' class='section-header'><a href="#functions">Functions</a></h2>
 <table>
                        <tr class=' module-item'>
                            <td><a class="fn" href="fn.align_up_for_fifo_size.html"
                                   title='fn fifo::align_up_for_fifo_size'>align_up_for_fifo_size</a></td>
                            <td class='docblock-short'>
-                                <p>Align the request size up to power of 2. If it&#39;s still less then 128
-after aligned, then use 128 as return value.</p>
+                                <p>Align the request size up to power of 2. If it&#39;s still less then 128 after aligned, then use 128 as return value.</p>
                            </td>
                        </tr>
                        <tr class=' module-item'>
                            <td><a class="fn" href="fn.fifo.html"
                                   title='fn fifo::fifo'>fifo</a></td>
                            <td class='docblock-short'>
-                                <p>Construct the fifo with capacity as <code>align_up_for_fifo_size(usize)</code>,
-and return the <code>Sender</code> and <code>Receiver</code> pair connected with that.</p>
+                                <p>Construct the fifo with capacity as <code>align_up_for_fifo_size(usize)</code>, and return the <code>Sender</code> and <code>Receiver</code> pair connected with that.</p>
                            </td>
                        </tr></table></section>
     <section id='search' class="content hidden"></section>

@@ -17,7 +17,7 @@
     
     
 </head>
-<body class="rustdoc">
+<body class="rustdoc trait">
     <!--[if lte IE 8]>
     <div class="warning">
         This old browser is unsupported and will most likely display funky
@@ -43,7 +43,7 @@
         </form>
     </nav>
 
-    <section id='main' class="content trait">
+    <section id='main' class="content">
 <h1 class='fqn'><span class='in-band'>Trait <a href='../index.html'>fifo</a>::<wbr><a href='index.html'>splice</a>::<wbr><a class="trait" href=''>SpliceWrite</a></span><span class='out-of-band'><span id='render-detail'>
                    <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
                        [<span class='inner'>&#x2212;</span>]
@@ -53,16 +53,13 @@
     fn <a href='#tymethod.splice_to' class='fnname'>splice_to</a>&lt;T&gt;(&amp;mut self, w: &amp;mut T, bytes: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/std/io/error/type.Result.html" title="type std::io::error::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>&gt; <span class="where fmt-newline">where T: <a class="trait" href="https://doc.rust-lang.org/nightly/std/io/trait.Write.html" title="trait std::io::Write">Write</a></span>;
 
     fn <a href='#method.splice_all_to' class='fnname'>splice_all_to</a>&lt;T&gt;(&amp;mut self, w: &amp;mut T) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/std/io/error/type.Result.html" title="type std::io::error::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">()</a>&gt; <span class="where fmt-newline">where T: <a class="trait" href="https://doc.rust-lang.org/nightly/std/io/trait.Write.html" title="trait std::io::Write">Write</a></span> { ... }
-}</pre><div class='docblock'><p>Copy some bytes directly into another <code>Write</code> object, without use any temporary buffers.</p>
-</div>
+}</pre><div class='docblock'><p>Copy some bytes directly into another <code>Write</code> object, without use any temporary buffers.</p></div>
             <h2 id='required-methods'>Required Methods</h2>
             <div class='methods'>
-        <h3 id='tymethod.splice_to' class='method'><span id='splice_to.v' class='invisible'><code>fn <a href='#tymethod.splice_to' class='fnname'>splice_to</a>&lt;T&gt;(&amp;mut self, w: &amp;mut T, bytes: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/std/io/error/type.Result.html" title="type std::io::error::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>&gt; <span class="where fmt-newline">where T: <a class="trait" href="https://doc.rust-lang.org/nightly/std/io/trait.Write.html" title="trait std::io::Write">Write</a></span></code></span></h3><div class='docblock'><p>Copy at most <em>bytes</em> bytes into a <code>Write</code> <em>w</em>.</p>
-</div></div>
+        <h3 id='tymethod.splice_to' class='method'><span id='splice_to.v' class='invisible'><code>fn <a href='#tymethod.splice_to' class='fnname'>splice_to</a>&lt;T&gt;(&amp;mut self, w: &amp;mut T, bytes: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/std/io/error/type.Result.html" title="type std::io::error::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.usize.html">usize</a>&gt; <span class="where fmt-newline">where T: <a class="trait" href="https://doc.rust-lang.org/nightly/std/io/trait.Write.html" title="trait std::io::Write">Write</a></span></code></span></h3><div class='docblock'><p>Copy at most <em>bytes</em> bytes into a <code>Write</code> <em>w</em>.</p></div></div>
             <h2 id='provided-methods'>Provided Methods</h2>
             <div class='methods'>
-        <h3 id='method.splice_all_to' class='method'><span id='splice_all_to.v' class='invisible'><code>fn <a href='#method.splice_all_to' class='fnname'>splice_all_to</a>&lt;T&gt;(&amp;mut self, w: &amp;mut T) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/std/io/error/type.Result.html" title="type std::io::error::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">()</a>&gt; <span class="where fmt-newline">where T: <a class="trait" href="https://doc.rust-lang.org/nightly/std/io/trait.Write.html" title="trait std::io::Write">Write</a></span></code></span></h3><div class='docblock'><p>Copy all bytes to a <code>Write</code> <em>w</em>.</p>
-</div></div>
+        <h3 id='method.splice_all_to' class='method'><span id='splice_all_to.v' class='invisible'><code>fn <a href='#method.splice_all_to' class='fnname'>splice_all_to</a>&lt;T&gt;(&amp;mut self, w: &amp;mut T) -&gt; <a class="type" href="https://doc.rust-lang.org/nightly/std/io/error/type.Result.html" title="type std::io::error::Result">Result</a>&lt;<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.tuple.html">()</a>&gt; <span class="where fmt-newline">where T: <a class="trait" href="https://doc.rust-lang.org/nightly/std/io/trait.Write.html" title="trait std::io::Write">Write</a></span></code></span></h3><div class='docblock'><p>Copy all bytes to a <code>Write</code> <em>w</em>.</p></div></div>
         <h2 id='implementors'>Implementors</h2>
         <ul class='item-list' id='implementors-list'>
     <li><code>impl SpliceWrite for <a class="struct" href="../../fifo/struct.Receiver.html" title="struct fifo::Receiver">Receiver</a></code></li>
