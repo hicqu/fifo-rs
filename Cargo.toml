@@ -1,6 +1,6 @@
 [package]
 name = "fifo"
-version = "0.1.3"
+version = "0.1.4"
 license = "MIT"
 authors = ["qupeng <onlyqupeng@gmail.com>"]
 description = "First-in-first-out lock-free ring-buffer like kfifo in Linux"

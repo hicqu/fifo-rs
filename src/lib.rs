@@ -57,14 +57,29 @@ impl Drop for Inner {
 
 unsafe impl Sync for Inner {}
 
+/// What can we do when operations on `Sender` or `Receiver` would block.
+///
+/// 1) Just return `Err(ErrorKind::WouldBlock)` immediately; or
+/// 2) sleep for some milliseconds.
+///
+/// The default on `Sender` and `Receiver` is Sleep(10).
+pub enum WouldBlock {
+    Nonblock,
+    Sleep(u64),
+}
+
 /// The fifo sender. It's `Send` but `!Send`.
 pub struct Sender {
+    _private: (),
     inner: Arc<Inner>,
+    would_block: WouldBlock,
 }
 
 /// The fifo receiver. It's `Send` but `!Send`.
 pub struct Receiver {
+    _private: (),
     inner: Arc<Inner>,
+    would_block: WouldBlock,
 }
 
 impl Drop for Sender {
@@ -107,12 +122,24 @@ pub fn align_up_for_fifo_size(size: usize) -> usize {
 pub fn fifo(size: usize) -> (Sender, Receiver) {
     let size = align_up_for_fifo_size(size);
     let inner = Arc::new(Inner::new(size));
-    let sender = Sender { inner: inner.clone() };
-    let receiver = Receiver { inner: inner };
+    let sender = Sender {
+        _private: (),
+        inner: inner.clone(),
+        would_block: WouldBlock::Sleep(10),
+    };
+    let receiver = Receiver {
+        _private: (),
+        inner: inner,
+        would_block: WouldBlock::Sleep(10),
+    };
     (sender, receiver)
 }
 
 impl Sender {
+    pub fn set_would_block(&mut self, would_block: WouldBlock) {
+        self.would_block = would_block;
+    }
+
     fn do_write<T>(&mut self, bytes: usize, mut cp_data_to: T) -> io::Result<usize>
         where T: FnMut(&mut [u8], usize, usize) -> io::Result<usize>
     {
@@ -128,9 +155,13 @@ impl Sender {
                 break;
             } else {
                 if inner.shutdown.shuted(SHUT_READ) {
-                    return Err(io::Error::new(io::ErrorKind::BrokenPipe, "broken pipe"));
+                    return Err(io::Error::new(io::ErrorKind::BrokenPipe, "closed on read end"));
                 }
-                thread::sleep(time::Duration::from_millis(10));
+                if let WouldBlock::Sleep(sleep) = self.would_block {
+                    thread::sleep(time::Duration::from_millis(sleep));
+                } else {
+                    return Err(io::Error::new(io::ErrorKind::WouldBlock, "buffer is full"));
+                }
             };
         }
         let start_pos = pin & (inner.size - 1);
@@ -161,6 +192,10 @@ impl io::Write for Sender {
 }
 
 impl Receiver {
+    pub fn set_would_block(&mut self, would_block: WouldBlock) {
+        self.would_block = would_block;
+    }
+
     fn do_write<T>(&mut self, bytes: usize, mut cp_data_from: T) -> io::Result<usize>
         where T: FnMut(&[u8], usize, usize) -> io::Result<usize>
     {
@@ -178,7 +213,11 @@ impl Receiver {
                 if inner.shutdown.shuted(SHUT_WRITE) {
                     return Ok(0);
                 }
-                thread::sleep(time::Duration::from_millis(10));
+                if let WouldBlock::Sleep(sleep) = self.would_block {
+                    thread::sleep(time::Duration::from_millis(sleep));
+                } else {
+                    return Err(io::Error::new(io::ErrorKind::WouldBlock, "buffer is empty"));
+                }
             }
         }
         let start_pos = pout & (inner.size - 1);
