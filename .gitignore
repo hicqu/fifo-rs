@@ -4,6 +4,7 @@
 target/
 **/*.rs.bk
 Cargo.lock
+.idea
 
 _book
 SUMMARY.md
