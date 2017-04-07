@@ -6,7 +6,7 @@
 //! use std::io::prelude::*;
 //! use fifo::{fifo, Sender, Receiver};
 //!
-//! let (mut sender, mut receiver) = fifo(128);
+//! let (mut sender, mut receiver): (Sender, Receiver) = fifo(128);
 //!
 //! let bytes_to_write = [0 as u8; 512];
 //! assert_eq!(sender.write(&bytes_to_write).unwrap(), 128);
@@ -15,6 +15,8 @@
 //! assert_eq!(receiver.read(&mut bytes_to_read).unwrap(), 128);
 //!
 //! assert_eq!(bytes_to_write[0..128], bytes_to_read[0..128]);
+//!
+//! assert!(sender.as_ref().unread() >= 0);
 //! ```
 #![feature(alloc, heap_api)]
 #![feature(optin_builtin_traits)]
@@ -46,6 +48,11 @@ impl Inner {
             pout: AtomicUsize::new(0),
             shutdown: shutdown,
         }
+    }
+    pub fn unread(&self) -> usize {
+        let pout = self.pout.load(Ordering::Acquire);
+        let pin = self.pin.load(Ordering::Acquire);
+        pin - pout
     }
 }
 
@@ -80,6 +87,18 @@ pub struct Receiver {
     _private: (),
     inner: Arc<Inner>,
     would_block: WouldBlock,
+}
+
+impl AsRef<Inner> for Sender {
+    fn as_ref(&self) -> &Inner {
+        &self.inner
+    }
+}
+
+impl AsRef<Inner> for Receiver {
+    fn as_ref(&self) -> &Inner {
+        &self.inner
+    }
 }
 
 impl Drop for Sender {
