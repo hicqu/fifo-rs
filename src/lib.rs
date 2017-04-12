@@ -118,28 +118,10 @@ unsafe impl Send for Receiver {}
 impl !Sync for Sender {}
 impl !Sync for Receiver {}
 
-
-const FIFO_MIN_CAPACITY: usize = 128;
-
-/// Align the request size up to power of 2. If it's still less then 128
-/// after aligned, then use 128 as return value.
-pub fn align_up_for_fifo_size(size: usize) -> usize {
-    if size < FIFO_MIN_CAPACITY {
-        return FIFO_MIN_CAPACITY;
-    }
-    let mut capacity = FIFO_MIN_CAPACITY;
-    loop {
-        if capacity >= size {
-            return capacity;
-        }
-        capacity = capacity << 1;
-    }
-}
-
-/// Construct the fifo with capacity as `align_up_for_fifo_size(usize)`,
+/// Construct the fifo with capacity as `size.next_power_of_two()`,
 /// and return the `Sender` and `Receiver` pair connected with that.
 pub fn fifo(size: usize) -> (Sender, Receiver) {
-    let size = align_up_for_fifo_size(size);
+    let size = size.next_power_of_two();
     let inner = Arc::new(Inner::new(size));
     let sender = Sender {
         _private: (),
@@ -258,18 +240,5 @@ impl io::Read for Receiver {
             Ok(avaliable)
         };
         self.do_write(bytes_len, copy_data_from)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_align_up() {
-        assert_eq!(align_up_for_fifo_size(1), FIFO_MIN_CAPACITY);
-        assert_eq!(align_up_for_fifo_size(3), FIFO_MIN_CAPACITY);
-        assert_eq!(align_up_for_fifo_size(16), FIFO_MIN_CAPACITY);
-        assert_eq!(align_up_for_fifo_size(255), 256);
     }
 }
