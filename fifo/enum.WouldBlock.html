@@ -52,7 +52,13 @@
 <pre class='rust enum'>pub enum WouldBlock {
     Nonblock,
     Sleep(<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.u64.html">u64</a>),
-}</pre><div class='docblock'><p>What can we do when operations on <code>Sender</code> or <code>Receiver</code> would block.</p><ul><li>Just return <code>Err(ErrorKind::WouldBlock)</code> immediately; or</li><li>sleep for some milliseconds.</li></ul><p>The default on <code>Sender</code> and <code>Receiver</code> is Sleep(10).</p></div><h2 class='variants'>Variants</h2>
+}</pre><div class='docblock'><p>What can we do when operations on <code>Sender</code> or <code>Receiver</code> would block.</p>
+<ol>
+<li>Just return <code>Err(ErrorKind::WouldBlock)</code> immediately; or</li>
+<li>sleep for some milliseconds.</li>
+</ol>
+<p>The default on <code>Sender</code> and <code>Receiver</code> is Sleep(10).</p>
+</div><h2 class='variants'>Variants</h2>
 <span id='variant.Nonblock' class='variant'><span id='Nonblock.v' class='invisible'><code>Nonblock</code></span></span><span id='variant.Sleep' class='variant'><span id='Sleep.v' class='invisible'><code>Sleep(<a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.u64.html">u64</a>)</code></span></span></section>
     <section id='search' class="content hidden"></section>
 
