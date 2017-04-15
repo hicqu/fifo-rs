@@ -365,14 +365,14 @@
     <span class="ident">Sleep</span>(<span class="ident">u64</span>),
 }
 
-<span class="doccomment">/// The fifo sender. It&#39;s `Send` but `!Send`.</span>
+<span class="doccomment">/// The fifo sender. It&#39;s `Send` but `!Sync`.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sender</span> {
     <span class="ident">_private</span>: (),
     <span class="ident">inner</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,
     <span class="ident">would_block</span>: <span class="ident">WouldBlock</span>,
 }
 
-<span class="doccomment">/// The fifo receiver. It&#39;s `Send` but `!Send`.</span>
+<span class="doccomment">/// The fifo receiver. It&#39;s `Send` but `!Sync`.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Receiver</span> {
     <span class="ident">_private</span>: (),
     <span class="ident">inner</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,

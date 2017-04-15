@@ -83,7 +83,7 @@ bytes from this into a <code>Write</code>, you can use <code>SpliceRead</code> a
                            <td><a class="struct" href="struct.Receiver.html"
                                   title='struct fifo::Receiver'>Receiver</a></td>
                            <td class='docblock-short'>
-                                <p>The fifo receiver. It's <code>Send</code> but <code>!Send</code>.</p>
+                                <p>The fifo receiver. It's <code>Send</code> but <code>!Sync</code>.</p>
 
                            </td>
                        </tr>
@@ -91,7 +91,7 @@ bytes from this into a <code>Write</code>, you can use <code>SpliceRead</code> a
                            <td><a class="struct" href="struct.Sender.html"
                                   title='struct fifo::Sender'>Sender</a></td>
                            <td class='docblock-short'>
-                                <p>The fifo sender. It's <code>Send</code> but <code>!Send</code>.</p>
+                                <p>The fifo sender. It's <code>Send</code> but <code>!Sync</code>.</p>
 
                            </td>
                        </tr></table><h2 id='enums' class='section-header'><a href="#enums">Enums</a></h2>
