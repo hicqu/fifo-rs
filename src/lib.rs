@@ -75,14 +75,14 @@ pub enum WouldBlock {
     Sleep(u64),
 }
 
-/// The fifo sender. It's `Send` but `!Send`.
+/// The fifo sender. It's `Send` but `!Sync`.
 pub struct Sender {
     _private: (),
     inner: Arc<Inner>,
     would_block: WouldBlock,
 }
 
-/// The fifo receiver. It's `Send` but `!Send`.
+/// The fifo receiver. It's `Send` but `!Sync`.
 pub struct Receiver {
     _private: (),
     inner: Arc<Inner>,
